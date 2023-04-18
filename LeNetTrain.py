@@ -123,6 +123,8 @@ if __name__ == '__main__':
     model = Lenet5.Lenet5_tf()
 
     # history = model.train(train_data, train_labels, test_images=test_data, test_labels=test_labels)
+    # model.save_model()
+    # model.save_model(to_tflite=True)
 
     model.load_model('checkpoint/lenet5.h5')
     model.load_model('checkpoint/lenet5.tflite')
@@ -131,17 +133,30 @@ if __name__ == '__main__':
     start_time = time.time()
     model.eval(test_data, test_labels)
     end_time = time.time()
-    print(f'time elapsed: {end_time-start_time}')
-
-    start_time = time.time()
-    model.eval(test_data, test_labels, use_tflite_quant=True)
-    end_time = time.time()
-    print(f'time elapsed: {end_time-start_time}')
+    print(f'TF - time elapsed: {end_time-start_time}')
 
     start_time = time.time()
     model.eval(test_data, test_labels, use_tflite=True)
     end_time = time.time()
-    print(f'time elapsed: {end_time-start_time}')
+    print(f'TFlite - time elapsed: {end_time-start_time}')
+
+    start_time = time.time()
+    model.eval(test_data, test_labels, use_tflite_quant=True)
+    end_time = time.time()
+    print(f'TFLite(DynamicQuant) - time elapsed: {end_time-start_time}')
+
+    model.convert_to_tflite_quant(test_data, 1)
+    start_time = time.time()
+    model.eval(test_data, test_labels, use_tflite_quant=True)
+    end_time = time.time()
+    print(f'TFLite(FullInteger) - time elapsed: {end_time-start_time}')
+
+    model.convert_to_tflite_quant(test_data, mode=2)
+    start_time = time.time()
+    model.eval(test_data, test_labels, use_tflite_quant=True)
+    end_time = time.time()
+    print(f'TFLite(Float16) - time elapsed: {end_time-start_time}')
+
 
 
 

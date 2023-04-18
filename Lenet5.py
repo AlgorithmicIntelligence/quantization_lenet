@@ -25,9 +25,9 @@ class Lenet5_tf():
         self.model.add(layers.MaxPooling2D(2,2))
         self.model.add(layers.Conv2D(16, (5, 5), activation='relu'))
         self.model.add(layers.MaxPooling2D(2,2))
-        self.model.add(layers.Conv2D(120, (5, 5), activation='relu'))
+        self.model.add(layers.Conv2D(32, (5, 5), activation='relu'))
         self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(84, activation='relu'))
+        self.model.add(layers.Dense(32, activation='relu'))
         self.model.add(layers.Dense(10))
 
         self.model.compile(optimizer='adam',
@@ -36,6 +36,7 @@ class Lenet5_tf():
         self.model.summary()
 
     def train(self, train_images, train_labels, epochs=10, test_images=None, test_labels=None):
+        self.build_model_with_lenet5()
         history = self.model.fit(train_images, train_labels, batch_size=64, epochs=epochs, validation_data=(test_images, test_labels))
         # plt.plot(history.history['accuracy'], label='accuracy')
         # plt.plot(history.history['val_accuracy'], label='val_accuracy')
@@ -133,7 +134,7 @@ class Lenet5_tf():
         else:
             self.model.save(model_path+'.h5')
 
-    def convert_to_tflite_quant(self, cal_dataset=None):
+    def convert_to_tflite_quant(self, cal_dataset=None, mode=0):
         def representative_dataset():
             for idx in range(len(cal_dataset)):
                 yield [cal_dataset[idx:idx+1]]
@@ -143,9 +144,12 @@ class Lenet5_tf():
             raise Exception('Assign model first.')
 
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.target_spec.supported_types = [tf.float16]
+        if mode == 1:
+            converter.representative_dataset = representative_dataset
+        elif mode == 2:
+            converter.target_spec.supported_types = [tf.float16]
         # if cal_dataset.any():
-        #     converter.representative_dataset = representative_dataset
+        #
         tflite_model_content = converter.convert()
         self.tflite_quant_model = tf.lite.Interpreter(model_content=tflite_model_content)
         self.tflite_quant_model.allocate_tensors()
